@@ -1,6 +1,19 @@
 "use client";
 import { useForm, type FieldValues } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { z } from "zod";
+
+const signUpSchema = z
+  .object({
+    email: z.string().email(),
+    password: z.string().min(10, "Password must be at least 10 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords must mactch",
+    path: ["confirmPassword"],
+  });
 
 export default function FormWithReactHookFormAndZod() {
   const {
@@ -8,8 +21,9 @@ export default function FormWithReactHookFormAndZod() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    getValues,
-  } = useForm();
+  } = useForm({
+    resolver: zodResolver(signUpSchema),
+  });
 
   const onSubmit = async (data: FieldValues) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -19,7 +33,7 @@ export default function FormWithReactHookFormAndZod() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-2">
       <input
-        {...register("email", { required: "Email is required" })}
+        {...register("email")}
         type="email"
         placeholder="Email"
         className="px-4 py-2 rounded"
@@ -29,13 +43,7 @@ export default function FormWithReactHookFormAndZod() {
       )}
 
       <input
-        {...register("password", {
-          required: "Password is required",
-          minLength: {
-            value: 10,
-            message: "Password must be at least 10 characters",
-          },
-        })}
+        {...register("password")}
         type="password"
         placeholder="Password"
         className="px-4 py-2 rounded"
@@ -45,11 +53,7 @@ export default function FormWithReactHookFormAndZod() {
       )}
 
       <input
-        {...register("confirmPassword", {
-          required: "Confirm Password is required",
-          validate: (value) =>
-            value === getValues("password") || "Passwords must match",
-        })}
+        {...register("confirmPassword")}
         type="password"
         placeholder="Confirm password"
         className="px-4 py-2 rounded"
